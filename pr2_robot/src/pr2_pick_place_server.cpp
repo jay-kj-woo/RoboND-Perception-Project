@@ -421,8 +421,8 @@ bool PR2PickPlace::OperateRightGripper(const bool &close_gripper)
   // Set finger joint values
   if (close_gripper)
   {
-    gripper_joint_positions[0] = 0.04;
-    gripper_joint_positions[1] = 0.04;
+    gripper_joint_positions[0] = 0.01;
+    gripper_joint_positions[1] = 0.05;
   }
   else
   {
@@ -453,8 +453,8 @@ bool PR2PickPlace::OperateLeftGripper(const bool &close_gripper)
   // Set finger joint values
   if (close_gripper)
   {
-    gripper_joint_positions[0] = 0.045;
-    gripper_joint_positions[1] = 0.045;
+    gripper_joint_positions[0] = 0.05;
+    gripper_joint_positions[1] = 0.05;
   }
   else
   {
