@@ -139,8 +139,98 @@ To visualize the result of above clustering, each cluster is masked with differe
     cluster_cloud = pcl.PointCloud_PointXYZRGB()
     cluster_cloud.from_list(color_cluster_point_list)
 ```
-# Object Recognition from MachineLearning Model
-Finally, the objects are identified from the clusters using a SVM model.
+# Object Recognition from Machine Learning Model
+As a part of object recognition, one of the supervised machine learning algorithms called Support Vecotr Machine (SVM) is used. Training of SVM model is done using the color features such as HSV values and the geometric features such as surface normals are extracted from the generated good data. 
+## Color Feature Extraction
+Histograms of HSV values are extracted using the following function.
+```python
+def compute_color_histograms(cloud, using_hsv=False):
+
+    # Compute histograms for the clusters
+    point_colors_list = []
+
+    # Step through each point in the point cloud
+    for point in pc2.read_points(cloud, skip_nans=True):
+        rgb_list = float_to_rgb(point[3])
+        if using_hsv:
+            point_colors_list.append(rgb_to_hsv(rgb_list) * 255)
+        else:
+            point_colors_list.append(rgb_list)
+
+    # Populate lists with color values
+    channel_1_vals = []
+    channel_2_vals = []
+    channel_3_vals = []
+
+    for color in point_colors_list:
+        channel_1_vals.append(color[0])
+        channel_2_vals.append(color[1])
+        channel_3_vals.append(color[2])
+    
+    # Compute histograms
+    nbins = 64
+    bins_range = (0,256)
+    ch1_hist = np.histogram(channel_1_vals, bins=nbins, range=bins_range)
+    ch2_hist = np.histogram(channel_2_vals, bins=nbins, range=bins_range)
+    ch3_hist = np.histogram(channel_3_vals, bins=nbins, range=bins_range)
+
+    # Concatenate and normalize the histograms
+    hist_features = np.concatenate((ch1_hist[0], ch2_hist[0], ch3_hist[0])).astype(np.float64)
+    normed_features = hist_features/np.sum(hist_features)
+
+    return normed_features
+```
+## Geometric Feature Extraction
+Histograms of surface normal vectors are extracted using the following function.
+```python
+def compute_normal_histograms(normal_cloud):
+    norm_x_vals = []
+    norm_y_vals = []
+    norm_z_vals = []
+
+    for norm_component in pc2.read_points(normal_cloud,
+                                          field_names = ('normal_x', 'normal_y', 'normal_z'),
+                                          skip_nans=True):
+        norm_x_vals.append(norm_component[0])
+        norm_y_vals.append(norm_component[1])
+        norm_z_vals.append(norm_component[2])
+
+    # Compute histograms of normal values (just like with color)
+    nbins = 64
+    bins_range = (0,256)
+    x_hist = np.histogram(norm_x_vals, bins=nbins, range=bins_range)
+    y_hist = np.histogram(norm_y_vals, bins=nbins, range=bins_range)
+    z_hist = np.histogram(norm_z_vals, bins=nbins, range=bins_range)
+
+    # Concatenate and normalize the histograms
+    hist_features = np.concatenate((x_hist[0], y_hist[0], z_hist[0])).astype(np.float64)
+    normed_features = hist_features/np.sum(hist_features)
+
+    return normed_features
+```
+## SVM 
+Differentn parameters for the SVM are tested, and the final training is done using the following parameters
+Parameter | Values
+--- | ---:
+Kernel | rbf
+C | 1.0
+gamma | 
+
+The results of the training for 3 world settings are shown below
+### World 1 Training Results
+Test 1 | Values
+--- | ---: 
+Features in Training Set |
+Invalid Features in Training Set |
+Scores |
+Accuracy |
+Accuracy Score |
+
+
+### World 2 Training Results
+
+### World 3 Training Results
+
 
 
 
