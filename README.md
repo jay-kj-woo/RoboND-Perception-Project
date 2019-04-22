@@ -293,12 +293,15 @@ Now we have our SVM models trained, we can implement these into our 3D perceptio
 
 ### World 1 Object Recognition Results
 ![world1 object recognition][object recognition world1]
+
 All 3 objects are successfully identified!
 ### World 2 Object Recognition Results
 ![world2 object recognition][object recognition world2]
+
 All 5 objects are successfully identified!
 ### World 3 Object Recognition Results
 ![world3 object recognition][object recognition world3]
+
 All 8 objects are successfully identified!
 
 # 3. Pick and Place
