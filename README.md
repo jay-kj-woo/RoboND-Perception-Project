@@ -1,4 +1,31 @@
 [![Udacity - Robotics NanoDegree Program](https://s3-us-west-1.amazonaws.com/udacity-robotics/Extra+Images/RoboND_flag.png)](https://www.udacity.com/robotics)
+
+[//]: # (Image References)
+
+[original raw image]: ./image/original_point_cloud.png
+[RANSAC objects]: ./image/RANSAC_objects.png
+[cluster cloud]: ./image/cluster_cloud.png
+[object recognition world1]: ./image/object_recognition_world1.png
+[object recognition world2]: ./image/object_recognition_world2.png
+[object recognition world3]: ./image/object_recognition_world3.png
+[original unfiltered image]: ./image/original_unfiltered.png
+[outlier filtering]: ./image/outlier_filtering.png
+[passthrough x]: ./image/passthrough_x.png
+[passthrough y]: ./image/passthrough_y.png
+[passthrough z]: ./image/passthrough_z.png
+[test1 training result]: ./image/test1_training_result1.png
+[test2 training result]: ./image/test2_training_result.png
+[test3 training result]: ./image/test3_training_result.png
+[test1 training normalized]: ./image/test1_training_result_normalized.png
+[test2 training normalized]: ./image/test2_training_result_normalized.png
+[test3 training normalized]: ./image/test3_training_result_normalized.png
+[voxel filtering]: ./image/voxel_downsample_filtering.png
+[gazebo 1]: ./image/gazebo_01.jpg
+[gazebo 2]: ./image/gazebo_02.jpg
+
+
+
+
 # 3D Perception Project with PR2 Robot
 In this project, PR2 robot identifies objects on a table, picks and places into the desginated bins. 
 The robot is equipped with a RGB-D camera that reads in the noisy point cloud data. It is processed using various filtering techniques and clustering technique to have each object separated and clustered. 
@@ -6,9 +33,9 @@ To identify individual object, machine learning is used to train the object reco
 Lastely, pick and place task is completed to sort the objects into the corresponding dropboxes. 
 
 
-# 3D Perception Pipeline
+# 1. 3D Perception Pipeline
 The raw point cloud data from the RGB-D camera includes all the objects in the space including the table top objects, the table, and floor. To exclude only the tabletop objects, various filtering techniques are used. Then the objects are separated into the individual clusters using the clustering technique. 
-include raw image
+![original unfiltered image][original unfiltered image] 
 ## Statistical Outlier Filtering
 Often time, the data we get from an image source contains noises. One of the methods of eliminating these outliers is to use a statistical analysis on the neighboring points and disregard the points that do not meet certain criteria. In this proejct, PCL's Statistical Outlier Removal filter is used.
 ```python
@@ -26,6 +53,7 @@ Often time, the data we get from an image source contains noises. One of the met
 ```
 From trial and error, the number of neighboring points to analyze is set to 5 and the threshold value is set to 0.00001. 
 The below image shows the result of the outlier filtering.
+![outlier filtering][outlier filtering]
 
 ## VoxelGrid Downsampling
 Running compution on a full resoluution cloud data is demanding and could slow the process. As a remedy, sparsely sampled data is used instead. In particular, VoxelGrid Downsampling filter is used to downsample the point cloud without a loss of important features. 
@@ -40,6 +68,7 @@ Running compution on a full resoluution cloud data is demanding and could slow t
     # Call the filter function to obtain the resultant downsampled point cloud
     cloud_filtered = vox.filter()
 ```
+![voxel downsampling][voxel filtering]
 
 ## Pass Through Filter
 It is possible to downsample further if the information about the location of the target in the scene is known ahead by 'cropping' out the unnecessary point cloud data using a Pass Through Filter. 
@@ -58,6 +87,7 @@ Along Z-axis
     # Finally use the filter function to obtain the resultant point cloud. 
     cloud_filtered = passthrough.filter()
 ```
+![z axis][passthrough z]
 Along Y-axis
 ```python
     # Apply Y axis
@@ -71,6 +101,7 @@ Along Y-axis
     # Finally use the filter function to obtain the resultant point cloud. 
     cloud_filtered = passthrough.filter()
 ```
+![y axis][passthrough y]
 Along X-axis
 ```python
     # Create a PassThrough filter object 
@@ -85,6 +116,7 @@ Along X-axis
     # Finally use the filter function to obtain the resultant point cloud. 
     cloud_filtered = passthrough.filter()
 ```
+![x axis][passthrough x]
 ## RANSAC Plane Segmentation 
 With the prior knowledge on the scene, the tabletop objects can be isoloated from the table using a segmentation technique. RANSAC(Random Sample Consensus) is a popular algorithm to identify points in the dataset that belongs to a particualr model. The plane model is chosen to identify the table from the scene, which is then extracted from the point cloud to leave only the tabletop objects.
 
@@ -106,6 +138,7 @@ With the prior knowledge on the scene, the tabletop objects can be isoloated fro
     # Extract outliers
     cloud_objects = cloud_filtered.extract(inliers, negative=True)
 ```
+![ransac objects][RANSAC objects]
 ## Euclidean Clustering
 Now that we have separated the tabletop objects from the scene, we need to cluster the point cloud into each object. 
 ```python
@@ -139,7 +172,8 @@ To visualize the result of above clustering, each cluster is masked with differe
     cluster_cloud = pcl.PointCloud_PointXYZRGB()
     cluster_cloud.from_list(color_cluster_point_list)
 ```
-# Object Recognition from Machine Learning Model
+![clustering][cluster cloud]
+# 2. Object Recognition from Machine Learning Model
 As a part of object recognition, one of the supervised machine learning algorithms called Support Vecotr Machine (SVM) is used. Training of SVM model is done using the color features such as HSV values and the geometric features such as surface normals are extracted from the generated good data. 
 ## Color Feature Extraction
 Histograms of HSV values are extracted using the following function.
@@ -209,51 +243,68 @@ def compute_normal_histograms(normal_cloud):
     return normed_features
 ```
 ## SVM 
-Differentn parameters for the SVM are tested, and the final training is done using the following parameters
-Parameter | Values
---- | ---:
+Different parameters for the SVM are tested, and the final training is done using the following parameters
+
+Parameters | Values
+--- | ---: 
 Kernel | rbf
 C | 1.0
-gamma | 
+gamma | scale
 
 The results of the training for 3 world settings are shown below
 ### World 1 Training Results
 Test 1 | Values
 --- | ---: 
-Features in Training Set |
-Invalid Features in Training Set |
-Scores |
-Accuracy |
-Accuracy Score |
+Features in Training Set | 900
+Invalid Features in Training Set | 0
+Scores | [0.983  0.966  0.977  0.961  0.961]
+Accuracy | 0.97 (+/- 0.02)
+Accuracy Score | 0.97
 
+![world1 training][test1 training result]
+![world1 training normalized][test1 training normalized]
 
 ### World 2 Training Results
+Test 2 | Values
+--- | ---: 
+Features in Training Set | 2500
+Invalid Features in Training Set | 4
+Scores | [0.934  0.921  0.925  0.917  0.937]
+Accuracy | 0.93 (+/- 0.01)
+Accuracy Score | 0.93
+
+![world2 training][test2 training result]
+![world2 training normalized][test2 training normalized]
 
 ### World 3 Training Results
+Test 3 | Values
+--- | ---: 
+Features in Training Set | 4000
+Invalid Features in Training Set | 10
+Scores | [0.926  0.917  0.904  0.909  0.893]
+Accuracy | 0.91 (+/- 0.02)
+Accuracy Score | 0.91
+
+![world3 training][test3 training result]
+![world3 training normalized][test3 training normalized]
+
+## Object Recognition
+Now we have our SVM models trained, we can implement these into our 3D perception pipeline to identify each object from the detected clusters. The color and geometric features are extracted from the detected cluster, and the SVM model predicts which object it is. Below shows the object recognition results for different testing worlds.
+
+### World 1 Object Recognition Results
+![world1 object recognition][object recognition world1]
+All 3 objects are successfully identified!
+### World 2 Object Recognition Results
+![world2 object recognition][object recognition world2]
+All 5 objects are successfully identified!
+### World 3 Object Recognition Results
+![world3 object recognition][object recognition world3]
+All 8 objects are successfully identified!
+
+# 3. Pick and Place
+As an additional challenge to the object recognition, the final task is to relocate the identified objects into the designated dropboxes. To pick up the object, its centroid from the cluster cloud is calculated and the corresponding path is planned via inverse kinematics. 
+![gazebo01][gazebo 1]
+![gazebo02][gazebo 2]
 
 
 
-
-# Required Steps for a Passing Submission:
-1. Extract features and train an SVM model on new objects (see `pick_list_*.yaml` in `/pr2_robot/config/` for the list of models you'll be trying to identify). 
-2. Write a ROS node and subscribe to `/pr2/world/points` topic. This topic contains noisy point cloud data that you must work with.
-3. Use filtering and RANSAC plane fitting to isolate the objects of interest from the rest of the scene.
-4. Apply Euclidean clustering to create separate clusters for individual items.
-5. Perform object recognition on these objects and assign them labels (markers in RViz).
-6. Calculate the centroid (average in x, y and z) of the set of points belonging to that each object.
-7. Create ROS messages containing the details of each object (name, pick_pose, etc.) and write these messages out to `.yaml` files, one for each of the 3 scenarios (`test1-3.world` in `/pr2_robot/worlds/`).  See the example `output.yaml` for details on what the output should look like.  
-8. Submit a link to your GitHub repo for the project or the Python code for your perception pipeline and your output `.yaml` files (3 `.yaml` files, one for each test world).  You must have correctly identified 100% of objects from `pick_list_1.yaml` for `test1.world`, 80% of items from `pick_list_2.yaml` for `test2.world` and 75% of items from `pick_list_3.yaml` in `test3.world`.
-9. Congratulations!  Your Done!
-
-# Extra Challenges: Complete the Pick & Place
-7. To create a collision map, publish a point cloud to the `/pr2/3d_map/points` topic and make sure you change the `point_cloud_topic` to `/pr2/3d_map/points` in `sensors.yaml` in the `/pr2_robot/config/` directory. This topic is read by Moveit!, which uses this point cloud input to generate a collision map, allowing the robot to plan its trajectory.  Keep in mind that later when you go to pick up an object, you must first remove it from this point cloud so it is removed from the collision map!
-8. Rotate the robot to generate collision map of table sides. This can be accomplished by publishing joint angle value(in radians) to `/pr2/world_joint_controller/command`
-9. Rotate the robot back to its original state.
-10. Create a ROS Client for the “pick_place_routine” rosservice.  In the required steps above, you already created the messages you need to use this service. Checkout the [PickPlace.srv](https://github.com/udacity/RoboND-Perception-Project/tree/master/pr2_robot/srv) file to find out what arguments you must pass to this service.
-11. If everything was done correctly, when you pass the appropriate messages to the `pick_place_routine` service, the selected arm will perform pick and place operation and display trajectory in the RViz window
-12. Place all the objects from your pick list in their respective dropoff box and you have completed the challenge!
-13. Looking for a bigger challenge?  Load up the `challenge.world` scenario and see if you can get your perception pipeline working there!
-
-For all the step-by-step details on how to complete this project see the [RoboND 3D Perception Project Lesson](https://classroom.udacity.com/nanodegrees/nd209/parts/586e8e81-fc68-4f71-9cab-98ccd4766cfe/modules/e5bfcfbd-3f7d-43fe-8248-0c65d910345a/lessons/e3e5fd8e-2f76-4169-a5bc-5a128d380155/concepts/802deabb-7dbb-46be-bf21-6cb0a39a1961)
-Note: The robot is a bit moody at times and might leave objects on the table or fling them across the room :D
-As long as your pipeline performs succesful recognition, your project will be considered successful even if the robot feels otherwise!
